@@ -11,15 +11,15 @@ import android.view.ViewGroup;
 
 import com.example.jose.simplenetworkconnections.controller.HouseAdapter;
 import com.example.jose.simplenetworkconnections.model.House;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Response;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -53,24 +53,13 @@ public class HouseFragment extends Fragment {
             public void onResponse(Response response) throws IOException {
                 try {
                     String jsonString = response.body().string();
-                    Log.d("RESPONSE BODY", jsonString);
-                    JSONObject jsonData = new JSONObject(jsonString);
-                    JSONArray houses = jsonData.getJSONArray("houses");
-                    houseList = new ArrayList(houses.length());
-                    for(int i=0;i < houses.length();i++){
-                        House house = new House();
-                        JSONObject object = houses.getJSONObject(i);
-                        house.setStyle(object.getString("style"));
-                        house.setPrice(object.getString("price"));
-                        house.setLocation(object.getString("location"));
-                        houseList.add(house);
-                    }
+                    JSONObject jsonObject = new JSONObject(jsonString);
+                    JSONArray jsonArray = jsonObject.getJSONArray("houses");
+                    houseList = new Gson().fromJson(jsonArray.toString(), new TypeToken<List<House>>(){}.getType());
                     adapter = new HouseAdapter(houseList);
                     recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
                     recyclerView.setAdapter(adapter);
-                } catch (IOException e) {
-                    Log.e(TAG,"Exception caught: ", e);
-                } catch(JSONException e){
+                } catch (Exception e) {
                     Log.e(TAG,"Exception caught: ", e);
                 }
             }
