@@ -8,6 +8,19 @@ public class House {
     private String price;
     private String location;
 
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setPrice(String price) {
+        this.price = price;
+    }
+
+    public void setStyle(String style) {
+        this.style = style;
+    }
+
+
     public String getPrice() {
         return price;
     }

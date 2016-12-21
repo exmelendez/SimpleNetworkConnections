@@ -9,23 +9,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.jose.simplenetworkconnections.backend.HouseService;
 import com.example.jose.simplenetworkconnections.controller.HouseAdapter;
-import com.example.jose.simplenetworkconnections.model.HouseResponse;
+import com.example.jose.simplenetworkconnections.model.House;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.Response;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class HouseFragment extends Fragment {
     private static final String TAG = "Connection result";
-    private static String BASE_URL = "http://jsjrobotics.nyc/cgi-bin/";
+    private static String BASE_URL = "http://jsjrobotics.nyc/cgi-bin/class_12_20_2016.pl";
     private RecyclerView recyclerView;
     private View mRoot;
     private HouseAdapter adapter;
+    private List<House> houseList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -34,20 +38,41 @@ public class HouseFragment extends Fragment {
     }
 
     private void connectToServer(String baseUrl) {
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(baseUrl).addConverterFactory(GsonConverterFactory.create()).build();
-        HouseService service = retrofit.create(HouseService.class);
-        Call<HouseResponse> call = service.getHouses();
-        call.enqueue(new Callback<HouseResponse>() {
+        com.squareup.okhttp.OkHttpClient client = new com.squareup.okhttp.OkHttpClient();
+        com.squareup.okhttp.Request request = new com.squareup.okhttp.Request.Builder()
+                .url(baseUrl)
+                .build();
+        com.squareup.okhttp.Call call = client.newCall(request);
+        call.enqueue(new Callback() {
             @Override
-            public void onResponse(Call<HouseResponse> call, Response<HouseResponse> response) {
-                adapter = new HouseAdapter(response.body());
-                recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-                recyclerView.setAdapter(adapter);
+            public void onFailure(com.squareup.okhttp.Request request, IOException e) {
+                Log.d(TAG,"Failed to connect");
             }
 
             @Override
-            public void onFailure(Call<HouseResponse> call, Throwable t) {
-                Log.d(TAG,"Failed to connect");
+            public void onResponse(Response response) throws IOException {
+                try {
+                    String jsonString = response.body().string();
+                    Log.d("RESPONSE BODY", jsonString);
+                    JSONObject jsonData = new JSONObject(jsonString);
+                    JSONArray houses = jsonData.getJSONArray("houses");
+                    houseList = new ArrayList(houses.length());
+                    for(int i=0;i < houses.length();i++){
+                        House house = new House();
+                        JSONObject object = houses.getJSONObject(i);
+                        house.setStyle(object.getString("style"));
+                        house.setPrice(object.getString("price"));
+                        house.setLocation(object.getString("location"));
+                        houseList.add(house);
+                    }
+                    adapter = new HouseAdapter(houseList);
+                    recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                    recyclerView.setAdapter(adapter);
+                } catch (IOException e) {
+                    Log.e(TAG,"Exception caught: ", e);
+                } catch(JSONException e){
+                    Log.e(TAG,"Exception caught: ", e);
+                }
             }
         });
     }
