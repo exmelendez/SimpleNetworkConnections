@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class HouseFragment extends Fragment {
+    private static final String TAG = "Connection result";
     private static String BASE_URL = "http://jsjrobotics.nyc/cgi-bin/";
     private RecyclerView recyclerView;
     private View mRoot;
@@ -45,7 +47,7 @@ public class HouseFragment extends Fragment {
 
             @Override
             public void onFailure(Call<HouseResponse> call, Throwable t) {
-
+                Log.d(TAG,"Failed to connect");
             }
         });
     }
